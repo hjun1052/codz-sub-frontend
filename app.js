@@ -223,12 +223,14 @@ verificationButton.addEventListener('click', async () => {
   verificationStatus.style.color = '#aaa';
 
   try {
-    const url = `https://dry-feather-f1e0.hjun7079.workers.dev/request?email=${encodeURIComponent(email)}&subdomain=${encodeURIComponent(subdomain)}`;
+    const preurl = URL(`https://dry-feather-f1e0.hjun7079.workers.dev/request?email=${encodeURIComponent(email)}&subdomain=${encodeURIComponent(subdomain)}`);
+    url = preurl.toString();
     const res = await fetch(url);
     const data = await res.json();
 
     if (data.ok) {
-      const mailApiUrl = 'https://codz-sub-mailer.hjun7079.workers.dev';
+      const mailApipreUrl = URL('https://codz-sub-mailer.hjun7079.workers.dev');
+      const mailApiUrl = mailApipreUrl.toString();
       await fetch(mailApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

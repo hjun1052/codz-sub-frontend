@@ -231,6 +231,7 @@ verificationButton.addEventListener('click', async () => {
     if (data.ok) {
       const mailApipreUrl = new URL('https://codz-sub-mailer.hjun7079.workers.dev');
       const mailApiUrl = mailApipreUrl.toString();
+      console.log(mailApiUrl);
       await fetch(mailApiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -236,7 +236,7 @@ verificationButton.addEventListener('click', async () => {
           to: email,
           subject: '[Codz Subdomain] 이메일 인증 링크',
           html: `<p>아래 링크를 클릭해 인증을 완료해주세요:</p>
-                <p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+                <p><a href="${data.verifyUrl}">${data.verifyUrl}</a></p>`,
         }),
       });
       verificationStatus.textContent = '📨 인증 메일을 발송했습니다. 메일의 링크를 눌러 신청을 완료하세요.';

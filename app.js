@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function checkSubdomainAvailable(sub) {
   sub = sub.trim().toLowerCase().replace(/\.codz\.me$/, '');
-  const url = `https://checkavailabilityofcodzsubdomainbycloudflaredoh.hjun7079.workers.dev/?name=${sub}.codz.me`;
-
+  const preurl = new URL(`https://checkavailabilityofcodzsubdomainbycloudflaredoh.hjun7079.workers.dev/?name=${sub}.codz.me`.trim());
+  const url = preurl.toString();
   const res = await fetch(url, {
     headers: { 'accept': 'application/dns-json' }
   });

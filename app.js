@@ -228,9 +228,20 @@ verificationButton.addEventListener('click', async () => {
     const data = await res.json();
 
     if (data.ok) {
+      const mailApiUrl = 'https://codz-sub-mailer.hjun7079.workers.dev';
+      await fetch(mailApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          subject: '[Codz Subdomain] 이메일 인증 링크',
+          html: `<p>아래 링크를 클릭해 인증을 완료해주세요:</p>
+                <p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+        }),
+      });
       verificationStatus.textContent = '📨 인증 메일을 발송했습니다. 메일의 링크를 눌러 신청을 완료하세요.';
       verificationStatus.style.color = '#7dff7d';
-      emailVerified = true; // 인증은 메일 클릭 시 확정되지만, 일단 발송 여부만 체크
+      emailVerified = true;
       updateSubmitAvailability();
     } else {
       verificationStatus.textContent = `오류: ${data.error}`;
@@ -272,7 +283,7 @@ requestForm.addEventListener('submit', async (evt) => {
 
     const data = await res.json();
     if (data.ok) {
-      formSubmitStatus.textContent = '✅ 신청이 정상적으로 접수되었습니다.';
+      formSubmitStatus.textContent = '신청이 정상적으로 접수되었습니다.';
       formSubmitStatus.style.color = '#7dff7d';
       setTimeout(closeModal, 1800);
     } else {

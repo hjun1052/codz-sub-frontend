@@ -1,24 +1,96 @@
 <!-- /verify.html -->
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>신청 검토 - codz.me</title>
   <style>
-    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px; color:#111; background:#0b0f12; }
-    .card { max-width: 760px; margin: 0 auto; background: #11161b; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; color:#e6f0ff; }
-    h1 { margin-top:0; font-size: 20px; }
-    table { width:100%; border-collapse: collapse; margin: 10px 0 20px; }
-    th, td { text-align:left; border-bottom:1px solid #1e293b; padding: 10px; vertical-align: top; }
-    .actions { display:flex; gap:8px; }
-    button { padding: 10px 14px; border-radius:10px; border:1px solid #2b3b52; background:#17202a; color:#e6f0ff; cursor:pointer; }
-    button[disabled] { opacity:.6; cursor:not-allowed; }
-    .ok { color:#86efac; }
-    .err { color:#fca5a5; }
-    .muted { color:#94a3b8; font-size:13px; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+      background: black;
+      color: white;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .card {
+      width: min(760px, 95vw);
+      background: rgba(15, 15, 15, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      background: linear-gradient(135deg, #27d16f, #00b85c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.8rem;
+    }
+
+    button {
+      padding: 0.7rem 1.6rem;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #27d16f, #00b85c);
+      color: black;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.4);
+      cursor: not-allowed;
+    }
+
+    .ok {
+      color: #7dff7d;
+    }
+
+    .err {
+      color: #ff7d7d;
+    }
+
+    .muted {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+    }
   </style>
 </head>
+
 <body>
   <div class="card">
     <h1>신청 정보 확인</h1>
@@ -67,7 +139,7 @@
       try {
         const res = await fetch(API_BASE + '/verify/inspect', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
         });
         const data = await res.json();
@@ -109,7 +181,7 @@
       try {
         const res = await fetch(API_BASE + '/verify/submit', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
         });
         const data = await res.json();
@@ -126,4 +198,5 @@
     inspect();
   </script>
 </body>
+
 </html>

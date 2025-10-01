@@ -71,6 +71,16 @@
       font-size: 1rem;
     }
 
+    .secondary {
+      background: rgba(39, 209, 111, 0.18);
+      border: 1px solid rgba(39, 209, 111, 0.4);
+      color: #7dff7d;
+    }
+
+    .secondary:hover {
+      background: rgba(39, 209, 111, 0.28);
+    }
+
     button:disabled {
       background: rgba(255, 255, 255, 0.1);
       color: rgba(255, 255, 255, 0.4);
@@ -94,6 +104,95 @@
       color: #27d16f;
       text-decoration: none;
     }
+
+    .record-editor {
+      margin: 1.4rem 0 1.8rem;
+      padding: 1.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .record-editor h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #7dff7d;
+    }
+
+    .record-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .record-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      padding: 0.8rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .record-row label {
+      flex: 1 1 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+    }
+
+    .record-row select,
+    .record-row input {
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: white;
+      font-size: 0.95rem;
+    }
+
+    .record-row select:focus,
+    .record-row input:focus {
+      outline: none;
+      border-color: #27d16f;
+      box-shadow: 0 0 0 2px rgba(39, 209, 111, 0.2);
+    }
+
+    .remove-record {
+      align-self: flex-end;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 125, 125, 0.4);
+      background: rgba(255, 125, 125, 0.1);
+      color: #ff9d9d;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .remove-record[hidden] {
+      display: none;
+    }
+
+    .record-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .record-actions button {
+      padding: 0.55rem 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    .small {
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 
@@ -105,6 +204,34 @@
       <table>
         <tbody id="rows"></tbody>
       </table>
+      <div id="recordEditor" class="record-editor" hidden>
+        <h2>DNS 레코드 수정</h2>
+        <div id="recordList" class="record-list"></div>
+        <template id="recordTemplate">
+          <div class="record-row" data-record>
+            <label>
+              레코드 유형
+              <select class="record-type">
+                <option value="">선택하세요</option>
+                <option value="A">A 레코드</option>
+                <option value="CNAME">CNAME</option>
+                <option value="TXT">TXT</option>
+              </select>
+            </label>
+            <label>
+              연결 값
+              <input type="text" class="record-value" placeholder="IP 또는 도메인/텍스트" />
+            </label>
+            <button type="button" class="remove-record" hidden>삭제</button>
+          </div>
+        </template>
+        <div class="record-actions">
+          <button type="button" id="addRecordBtn" class="secondary">+ 레코드 추가</button>
+          <button type="button" id="resendBtn" class="secondary">수정된 정보로 다시 인증 메일 받기</button>
+          <span id="recordStatus" class="muted small"></span>
+        </div>
+        <p class="muted small">레코드를 수정하면 현재 페이지의 신청 버튼은 사용할 수 없고, 새로 받은 인증 메일의 링크로 다시 진행해야 합니다.</p>
+      </div>
       <div class="actions">
         <button id="submitBtn">신청하기</button>
         <button id="homeBtn" type="button">다시 신청하기</button>
@@ -125,6 +252,12 @@
     const rows = document.getElementById('rows');
     const submitBtn = document.getElementById('submitBtn');
     const homeBtn = document.getElementById('homeBtn');
+    const recordEditor = document.getElementById('recordEditor');
+    const recordList = document.getElementById('recordList');
+    const recordTemplate = document.getElementById('recordTemplate');
+    const addRecordBtn = document.getElementById('addRecordBtn');
+    const resendBtn = document.getElementById('resendBtn');
+    const recordStatus = document.getElementById('recordStatus');
 
     homeBtn.onclick = () => location.href = 'https://sub.codz.me';
 
@@ -133,6 +266,99 @@
       tr.innerHTML = `<th style="width:160px">${label}</th><td>${value}</td>`;
       rows.appendChild(tr);
     }
+
+    const recordRows = () => Array.from(recordList.querySelectorAll('[data-record]'));
+
+    function syncRemoveButtons() {
+      const rows = recordRows();
+      rows.forEach((row) => {
+        const removeBtn = row.querySelector('.remove-record');
+        if (removeBtn) {
+          removeBtn.hidden = rows.length <= 1;
+        }
+      });
+    }
+
+    function renderRecords(records) {
+      recordList.innerHTML = '';
+      const items = records && records.length ? records : [{ type: '', value: '' }];
+      items.forEach((rec, index) => {
+        const fragment = recordTemplate.content.cloneNode(true);
+        const row = fragment.querySelector('[data-record]');
+        const typeField = row.querySelector('.record-type');
+        const valueField = row.querySelector('.record-value');
+        if (typeField) typeField.value = rec.type || '';
+        if (valueField) valueField.value = rec.value || '';
+        recordList.appendChild(row);
+      });
+      syncRemoveButtons();
+    }
+
+    function collectRecords() {
+      return recordRows().map((row) => {
+        const typeField = row.querySelector('.record-type');
+        const valueField = row.querySelector('.record-value');
+        return {
+          type: (typeField?.value || '').trim().toUpperCase(),
+          value: (valueField?.value || '').trim(),
+        };
+      }).filter((rec) => rec.type && rec.value);
+    }
+
+    let originalRecordSignature = '';
+    let recordsDirty = false;
+    let payloadCache = null;
+    let tokenAlreadyUsed = false;
+    let statusMessageBase = '';
+
+    function computeSignature(records) {
+      return JSON.stringify(records.map((rec) => ({
+        type: rec.type,
+        value: rec.value,
+      })));
+    }
+
+    function markDirty() {
+      const current = collectRecords();
+      const currentSig = computeSignature(current);
+      recordsDirty = currentSig !== originalRecordSignature;
+      if (recordsDirty) {
+        submitBtn.disabled = true;
+        statusEl.className = 'err';
+        statusEl.textContent = 'DNS 레코드를 수정하면 새 인증 메일로 다시 진행해야 합니다.';
+        recordStatus.textContent = '수정 사항을 적용하려면 다시 인증 메일을 받아주세요.';
+        recordStatus.className = 'err small';
+      } else {
+        submitBtn.disabled = tokenAlreadyUsed;
+        statusEl.className = tokenAlreadyUsed ? 'err' : 'ok';
+        statusEl.textContent = statusMessageBase;
+        recordStatus.textContent = '';
+        recordStatus.className = 'muted small';
+      }
+    }
+
+    recordList.addEventListener('input', markDirty);
+    recordList.addEventListener('change', markDirty);
+
+    recordList.addEventListener('click', (evt) => {
+      const removeBtn = evt.target.closest('.remove-record');
+      if (!removeBtn) return;
+      const row = removeBtn.closest('[data-record]');
+      if (!row) return;
+      const rows = recordRows();
+      if (rows.length <= 1) return;
+      row.remove();
+      syncRemoveButtons();
+      markDirty();
+    });
+
+    addRecordBtn.addEventListener('click', () => {
+      const fragment = recordTemplate.content.cloneNode(true);
+      const row = fragment.querySelector('[data-record]');
+      recordList.appendChild(row);
+      syncRemoveButtons();
+      markDirty();
+    });
 
     async function inspect() {
       if (!token) {
@@ -157,20 +383,33 @@
         row('학번', p.studentId);
         row('이메일', p.email);
         row('서브도메인', `${p.subdomain}.codz.me`);
-        row('레코드', `${p.recordType} → ${p.recordValue}`);
+        row('신청 상태', data.alreadyUsed ? '이미 제출됨' : '대기 중');
         row('미리보기 URL', `<a href="${p.previewUrl}" target="_blank" rel="noopener">${p.previewUrl}</a>`);
         row('사용 목적', p.purpose);
         row('이용 대상', p.audience);
         row('운영 기간', p.period);
 
-        if (data.alreadyUsed) {
+        payloadCache = p;
+        const initialRecords = Array.isArray(p.records) && p.records.length
+          ? p.records
+          : [{ type: p.recordType, value: p.recordValue }];
+        renderRecords(initialRecords);
+        originalRecordSignature = computeSignature(initialRecords);
+        recordsDirty = false;
+        recordStatus.textContent = '';
+        recordEditor.hidden = false;
+
+        tokenAlreadyUsed = Boolean(data.alreadyUsed);
+        if (tokenAlreadyUsed) {
           statusEl.className = 'err';
-          statusEl.textContent = '이미 처리된 요청입니다.';
+          statusMessageBase = '이미 처리된 요청입니다.';
           submitBtn.disabled = true;
         } else {
           statusEl.className = 'ok';
-          statusEl.textContent = '다음 정보가 올바른지 확인하세요.';
+          statusMessageBase = '다음 정보가 올바른지 확인하세요.';
+          submitBtn.disabled = false;
         }
+        statusEl.textContent = statusMessageBase;
         review.hidden = false;
       } catch (e) {
         statusEl.className = 'err';
@@ -198,6 +437,53 @@
         statusEl.className = 'err';
         statusEl.textContent = '인증에 실패했습니다. 다시 시도해주세요.';
         submitBtn.disabled = false;
+      }
+    };
+
+    resendBtn.onclick = async () => {
+      if (!payloadCache) return;
+      const records = collectRecords();
+      if (!records.length) {
+        recordStatus.textContent = '레코드를 최소 1개 이상 입력해주세요.';
+        recordStatus.className = 'err small';
+        return;
+      }
+      const primary = records[0];
+
+      resendBtn.disabled = true;
+      recordStatus.className = 'muted small';
+      recordStatus.textContent = '새 인증 메일을 발송 중입니다...';
+      try {
+        const body = {
+          studentId: payloadCache.studentId,
+          name: payloadCache.name,
+          email: payloadCache.email,
+          subdomain: payloadCache.subdomain,
+          recordType: primary.type,
+          recordValue: primary.value,
+          records,
+          previewUrl: payloadCache.previewUrl,
+          purpose: payloadCache.purpose,
+          audience: payloadCache.audience,
+          period: payloadCache.period,
+        };
+
+        const res = await fetch(API_BASE + '/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || 'REQUEST_FAILED');
+        }
+        recordStatus.className = 'ok small';
+        recordStatus.textContent = '수정된 정보로 새 인증 메일을 발송했어요. 메일의 새 링크로 다시 진행해주세요.';
+      } catch (err) {
+        recordStatus.className = 'err small';
+        recordStatus.textContent = '메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.';
+      } finally {
+        resendBtn.disabled = false;
       }
     };
 

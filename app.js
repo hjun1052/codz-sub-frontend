@@ -14,6 +14,13 @@ const submitRequestButton = document.getElementById('submit-request');
 const formSubmitStatus = document.getElementById('form-submit-status');
 const termsCheckbox = document.getElementById('terms-checkbox');
 const applicantEmailInput = document.getElementById('applicant-email');
+const recordList = document.getElementById('record-list');
+const addRecordButton = document.getElementById('add-record');
+const recordTemplate = document.getElementById('record-template');
+const platformSelect = document.getElementById('platform-select');
+const platformGuidance = document.getElementById('platform-guidance');
+const platformGuidanceTitle = platformGuidance?.querySelector('strong') || null;
+const platformGuidanceBody = platformGuidance?.querySelector('p') || null;
 
 document.addEventListener('DOMContentLoaded', () => {
   const words = [
@@ -120,6 +127,104 @@ async function checkSubdomainAvailable(sub) {
 let lastCheckedDomain = '';
 let emailVerified = false;
 
+const platformGuides = {
+  netlify: {
+    title: 'Netlify 설정',
+    body: '서브도메인은 CNAME 레코드로 your-site.netlify.app 을 가리키고, 루트 도메인은 A 레코드 두 개 (75.2.60.5, 99.83.190.102)를 권장합니다.',
+  },
+  cloudflare: {
+    title: 'Cloudflare Pages / Workers',
+    body: 'Pages 프로젝트는 CNAME 레코드로 your-project.pages.dev 에 연결하세요. Workers 사이트는 Cloudflare 대시보드에서 안내하는 전용 대상 값을 사용합니다.',
+  },
+  vercel: {
+    title: 'Vercel 설정',
+    body: '서브도메인은 CNAME 레코드로 cname.vercel-dns.com 을, 루트 도메인은 A 레코드로 76.76.21.21 을 설정합니다.',
+  },
+  github: {
+    title: 'GitHub Pages 설정',
+    body: 'CNAME 레코드로 username.github.io 를 가리키세요. 조직/프로젝트 페이지도 동일한 형식을 사용합니다.',
+  },
+  other: {
+    title: '기타 / 직접 설정',
+    body: '사용 중인 서비스에서 커스텀 도메인 안내에 적힌 CNAME 또는 A 레코드 값을 그대로 입력하면 됩니다. 필요한 IP/도메인 값을 다시 확인하세요.',
+  },
+};
+
+const hidePlatformGuidance = () => {
+  if (!platformGuidance) return;
+  platformGuidance.hidden = true;
+  if (platformGuidanceTitle) platformGuidanceTitle.textContent = '';
+  if (platformGuidanceBody) platformGuidanceBody.textContent = '';
+};
+
+const showPlatformGuidance = (key) => {
+  if (!platformGuidance || !platformGuidanceTitle || !platformGuidanceBody) return;
+  const guide = platformGuides[key];
+  if (!guide) {
+    hidePlatformGuidance();
+    return;
+  }
+  platformGuidanceTitle.textContent = guide.title;
+  platformGuidanceBody.textContent = guide.body;
+  platformGuidance.hidden = false;
+};
+
+const getRecordRows = () => {
+  if (!recordList) return [];
+  return Array.from(recordList.querySelectorAll('[data-record]'));
+};
+
+const syncRecordRemoveButtons = () => {
+  const rows = getRecordRows();
+  rows.forEach((row) => {
+    const removeBtn = row.querySelector('.remove-record');
+    if (removeBtn) {
+      removeBtn.hidden = rows.length <= 1;
+    }
+  });
+};
+
+const resetRecordGroup = () => {
+  const rows = getRecordRows();
+  if (!rows.length) return;
+
+  rows.forEach((row, index) => {
+    const typeField = row.querySelector('.record-type');
+    const targetField = row.querySelector('.record-target');
+    if (typeField) typeField.value = '';
+    if (targetField) targetField.value = '';
+    if (index > 0) {
+      row.remove();
+    }
+  });
+
+  syncRecordRemoveButtons();
+};
+
+const resetPlatformHelper = () => {
+  if (!platformSelect) return;
+  platformSelect.value = '';
+  hidePlatformGuidance();
+};
+
+const getRecordEntries = () => {
+  const rows = getRecordRows();
+  return rows
+    .map((row) => {
+      const typeField = row.querySelector('.record-type');
+      const targetField = row.querySelector('.record-target');
+      return {
+        type: (typeField?.value || '').trim(),
+        value: (targetField?.value || '').trim(),
+      };
+    })
+    .filter((entry) => entry.type && entry.value);
+};
+
+if (recordList) {
+  syncRecordRemoveButtons();
+}
+
 const closeModal = () => {
   modal.hidden = true;
   backdrop.hidden = true;
@@ -133,6 +238,8 @@ const openModal = () => {
   verificationStatus.textContent = '';
   verificationButton.disabled = false;
   emailVerified = false;
+  resetRecordGroup();
+  resetPlatformHelper();
   if (submitRequestButton) {
     submitRequestButton.disabled = true;
   }
@@ -147,6 +254,56 @@ const updateSubmitAvailability = () => {
   if (!submitRequestButton) return;
   submitRequestButton.disabled = !(termsCheckbox.checked && emailVerified);
 };
+
+const invalidateVerification = () => {
+  if (!emailVerified) return;
+  emailVerified = false;
+  updateSubmitAvailability();
+};
+
+if (addRecordButton && recordTemplate && recordList) {
+  addRecordButton.addEventListener('click', () => {
+    const fragment = recordTemplate.content.cloneNode(true);
+    const newRow = fragment.querySelector('[data-record]');
+    if (!newRow) return;
+    recordList.appendChild(newRow);
+    syncRecordRemoveButtons();
+    invalidateVerification();
+  });
+}
+
+if (recordList) {
+  recordList.addEventListener('click', (evt) => {
+    const removeBtn = evt.target.closest('.remove-record');
+    if (!removeBtn) return;
+    const row = removeBtn.closest('[data-record]');
+    if (!row) return;
+    const rows = getRecordRows();
+    if (rows.length <= 1) return;
+    row.remove();
+    syncRecordRemoveButtons();
+    invalidateVerification();
+  });
+
+  const recordChangeHandler = (evt) => {
+    if (!evt.target.closest('[data-record]')) return;
+    invalidateVerification();
+  };
+
+  recordList.addEventListener('input', recordChangeHandler);
+  recordList.addEventListener('change', recordChangeHandler);
+}
+
+if (platformSelect) {
+  platformSelect.addEventListener('change', (evt) => {
+    const key = evt.target.value;
+    if (!key) {
+      hidePlatformGuidance();
+      return;
+    }
+    showPlatformGuidance(key);
+  });
+}
 
 input.addEventListener('input', () => {
   requestBtn.disabled = true;
@@ -219,18 +376,17 @@ applicantEmailInput.addEventListener('input', () => {
     applicantEmailInput.setCustomValidity('디미고 이메일(@dimigo.hs.kr)만 사용할 수 있습니다.');
   }
 
-  if (emailVerified) {
-    emailVerified = false;
-    updateSubmitAvailability();
-  }
+  invalidateVerification();
 });
 
 // verificationButton.addEventListener('click', ...) 내부만 교체
 verificationButton.addEventListener('click', async () => {
   const email = applicantEmailInput.value.trim();
   const subdomain = formSubdomain.value.trim();
-  const recordType = document.getElementById('record-type').value;
-  const recordValue = document.getElementById('record-target').value.trim();
+  const records = getRecordEntries();
+  const primaryRecord = records[0] || { type: '', value: '' };
+  const recordType = primaryRecord.type;
+  const recordValue = primaryRecord.value;
   const previewUrl = document.getElementById('site-url').value.trim();
   const purpose = document.getElementById('usage-purpose').value.trim();
   const audience = document.getElementById('usage-audience').value.trim();
@@ -258,6 +414,12 @@ verificationButton.addEventListener('click', async () => {
     return;
   }
 
+  if (!records.length) {
+    verificationStatus.textContent = '연결할 레코드를 최소 1개 이상 입력해주세요.';
+    verificationStatus.style.color = '#ff7d7d';
+    return;
+  }
+
   verificationButton.disabled = true;
   verificationStatus.textContent = '인증 메일을 발송 중입니다...';
   verificationStatus.style.color = '#aaa';
@@ -270,6 +432,7 @@ verificationButton.addEventListener('click', async () => {
       subdomain,
       recordType,
       recordValue,
+      records,
       previewUrl,
       purpose,
       audience,
@@ -312,6 +475,14 @@ requestForm.addEventListener('submit', async (evt) => {
   }
   if (submitRequestButton.disabled) return;
 
+  const records = getRecordEntries();
+  if (!records.length) {
+    formSubmitStatus.textContent = '연결할 레코드를 최소 1개 이상 입력해주세요.';
+    formSubmitStatus.style.color = '#ff7d7d';
+    return;
+  }
+  const primaryRecord = records[0];
+
   const payload = {
     subdomain: formSubdomain.value.trim(),
     email: applicantEmailInput.value.trim(),
@@ -321,6 +492,9 @@ requestForm.addEventListener('submit', async (evt) => {
     usagePurpose: document.getElementById('usage-purpose').value.trim(),
     usageAudience: document.getElementById('usage-audience').value.trim(),
     usagePeriod: document.getElementById('usage-period').value.trim(),
+    recordType: primaryRecord.type,
+    recordValue: primaryRecord.value,
+    records,
   };
 
   formSubmitStatus.textContent = '제출 중입니다...';

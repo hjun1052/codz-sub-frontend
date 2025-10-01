@@ -89,18 +89,60 @@
           원하는 서브도메인 이름
           <input type="text" id="form-subdomain" name="subdomain" disabled />
         </label>
+        <div class="record-group">
+          <div class="record-list" id="record-list">
+            <div class="record-row" data-record>
+              <label>
+                연결할 대상
+                <select class="record-type" required>
+                  <option value="">선택하세요</option>
+                  <option value="A">A 레코드 IP</option>
+                  <option value="CNAME">CNAME URL</option>
+                  <option value="TXT">TXT</option>
+                </select>
+              </label>
+              <label>
+                A/CNAME/TXT 레코드 연결 대상 값
+                <input type="text" class="record-target" required />
+              </label>
+              <button type="button" class="remove-record" aria-label="레코드 삭제" hidden>삭제</button>
+            </div>
+          </div>
+          <button type="button" id="add-record" class="add-record">+ 레코드 추가</button>
+        </div>
         <label>
-          연결할 대상
-          <select id="record-type" name="recordType" required>
+          호스팅 플랫폼
+          <select id="platform-select" name="platform">
             <option value="">선택하세요</option>
-            <option value="A">A 레코드 IP</option>
-            <option value="CNAME">CNAME URL</option>
+            <option value="netlify">Netlify</option>
+            <option value="cloudflare">Cloudflare Pages / Workers</option>
+            <option value="vercel">Vercel</option>
+            <option value="github">GitHub Pages</option>
+            <option value="other">기타 또는 직접 설정</option>
           </select>
         </label>
-        <label>
-          A/CNAME 레코드 연결 대상 값 (IP 또는 URL)
-          <input type="text" id="record-target" name="recordTarget" required />
-        </label>
+        <div id="platform-guidance" class="platform-guidance" hidden>
+          <strong></strong>
+          <p></p>
+        </div>
+        <template id="record-template">
+          <div class="record-row" data-record>
+            <label>
+              연결할 대상
+              <select class="record-type" required>
+                <option value="">선택하세요</option>
+                <option value="A">A 레코드 IP</option>
+                <option value="CNAME">CNAME URL</option>
+                <option value="TXT">TXT</option>
+              </select>
+            </label>
+            <label>
+              A/CNAME/TXT 레코드 연결 대상 값
+              <input type="text" class="record-target" required />
+            </label>
+            <button type="button" class="remove-record" aria-label="레코드 삭제">삭제</button>
+          </div>
+        </template>
         <label>
           연결할 사이트의 미리보기 주소 (위 항목과 달라도 됨, 해당 사이트를 바탕으로 1차적으로 승인 여부를 판단함)
           <input type="url" id="site-url" name="siteUrl" required />

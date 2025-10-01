@@ -133,7 +133,9 @@ const openModal = () => {
   verificationStatus.textContent = '';
   verificationButton.disabled = false;
   emailVerified = false;
-  submitRequestButton.disabled = true;
+  if (submitRequestButton) {
+    submitRequestButton.disabled = true;
+  }
   formSubdomain.value = lastCheckedDomain;
   modal.hidden = false;
   backdrop.hidden = false;
@@ -142,6 +144,7 @@ const openModal = () => {
 };
 
 const updateSubmitAvailability = () => {
+  if (!submitRequestButton) return;
   submitRequestButton.disabled = !(termsCheckbox.checked && emailVerified);
 };
 
@@ -208,6 +211,20 @@ document.addEventListener('keydown', (evt) => {
 
 termsCheckbox.addEventListener('change', updateSubmitAvailability);
 
+applicantEmailInput.addEventListener('input', () => {
+  const email = applicantEmailInput.value.trim().toLowerCase();
+  if (!email || email.endsWith('@dimigo.hs.kr')) {
+    applicantEmailInput.setCustomValidity('');
+  } else {
+    applicantEmailInput.setCustomValidity('디미고 이메일(@dimigo.hs.kr)만 사용할 수 있습니다.');
+  }
+
+  if (emailVerified) {
+    emailVerified = false;
+    updateSubmitAvailability();
+  }
+});
+
 // verificationButton.addEventListener('click', ...) 내부만 교체
 verificationButton.addEventListener('click', async () => {
   const email = applicantEmailInput.value.trim();
@@ -219,8 +236,24 @@ verificationButton.addEventListener('click', async () => {
   const audience = document.getElementById('usage-audience').value.trim();
   const period = document.getElementById('usage-period').value;
 
-  if (!email) {
-    verificationStatus.textContent = '이메일을 입력한 후 다시 시도하세요.';
+  emailVerified = false;
+  updateSubmitAvailability();
+
+  if (!requestForm.reportValidity()) {
+    verificationStatus.textContent = '모든 필수 항목을 입력한 후 다시 시도하세요.';
+    verificationStatus.style.color = '#ff7d7d';
+    return;
+  }
+
+  if (!email.toLowerCase().endsWith('@dimigo.hs.kr')) {
+    verificationStatus.textContent = '디미고 이메일(@dimigo.hs.kr)만 사용할 수 있습니다.';
+    verificationStatus.style.color = '#ff7d7d';
+    applicantEmailInput.focus();
+    return;
+  }
+
+  if (!subdomain) {
+    verificationStatus.textContent = '서브도메인을 먼저 확인해주세요.';
     verificationStatus.style.color = '#ff7d7d';
     return;
   }

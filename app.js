@@ -208,9 +208,16 @@ document.addEventListener('keydown', (evt) => {
 
 termsCheckbox.addEventListener('change', updateSubmitAvailability);
 
+// verificationButton.addEventListener('click', ...) 내부만 교체
 verificationButton.addEventListener('click', async () => {
   const email = applicantEmailInput.value.trim();
   const subdomain = formSubdomain.value.trim();
+  const recordType = document.getElementById('record-type').value;
+  const recordValue = document.getElementById('record-target').value.trim();
+  const previewUrl = document.getElementById('site-url').value.trim();
+  const purpose = document.getElementById('usage-purpose').value.trim();
+  const audience = document.getElementById('usage-audience').value.trim();
+  const period = document.getElementById('usage-period').value;
 
   if (!email) {
     verificationStatus.textContent = '이메일을 입력한 후 다시 시도하세요.';
@@ -223,31 +230,33 @@ verificationButton.addEventListener('click', async () => {
   verificationStatus.style.color = '#aaa';
 
   try {
-    const preurl = new URL(`https://dry-feather-f1e0.hjun7079.workers.dev/request?email=${encodeURIComponent(email)}&subdomain=${encodeURIComponent(subdomain)}`);
-    url = preurl.toString();
-    const res = await fetch(url);
+    const payload = {
+      studentId: document.getElementById('applicant-id').value.trim(),
+      name: document.getElementById('applicant-name').value.trim(),
+      email,
+      subdomain,
+      recordType,
+      recordValue,
+      previewUrl,
+      purpose,
+      audience,
+      period,
+    };
+
+    const res = await fetch('https://YOUR_WORKER_DOMAIN.workers.dev/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
     const data = await res.json();
 
-    if (data.ok) {
-      const mailApipreUrl = new URL('https://send-email-worker.hjun7079.workers.dev');
-      const mailApiUrl = mailApipreUrl.toString().trim().replace(/\/$/, '');;
-      console.log(mailApiUrl);
-      await fetch(mailApiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: email,
-          subject: '[Codz Subdomain] 이메일 인증 링크',
-          html: `<p>아래 링크를 클릭해 인증을 완료해주세요:</p>
-                <p><a href="${data.verifyUrl}">${data.verifyUrl}</a></p>`,
-        }),
-      });
+    if (res.ok && data.ok) {
       verificationStatus.textContent = '📨 인증 메일을 발송했습니다. 메일의 링크를 눌러 신청을 완료하세요.';
       verificationStatus.style.color = '#7dff7d';
       emailVerified = true;
       updateSubmitAvailability();
     } else {
-      verificationStatus.textContent = `오류: ${data.error}`;
+      verificationStatus.textContent = `오류: ${data.error || '메일 발송 실패'}`;
       verificationStatus.style.color = '#ff7d7d';
       verificationButton.disabled = false;
     }

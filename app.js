@@ -229,7 +229,7 @@ verificationButton.addEventListener('click', async () => {
     const data = await res.json();
 
     if (data.ok) {
-      const mailApipreUrl = new URL('https://codz-sub-mailer.hjun7079.workers.dev');
+      const mailApipreUrl = new URL('https://send-email-worker.hjun7079.workers.dev');
       const mailApiUrl = mailApipreUrl.toString().trim().replace(/\/$/, '');;
       console.log(mailApiUrl);
       await fetch(mailApiUrl, {

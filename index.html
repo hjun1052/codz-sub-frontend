@@ -78,13 +78,7 @@
         </label>
         <label>
           디미고 이메일 주소
-          <input
-            type="email"
-            id="applicant-email"
-            name="applicantEmail"
-            required
-            title="디미고 이메일(@dimigo.hs.kr)만 사용할 수 있습니다."
-          />
+          <input type="email" id="applicant-email" name="applicantEmail" required />
         </label>
       </section>
 
@@ -107,7 +101,7 @@
           <input type="text" id="record-target" name="recordTarget" required />
         </label>
         <label>
-          연결할 사이트의 미리보기 주소 (위 항목과 주소가 달라도 됨, 해당 사이트를 바탕으로 1차적으로 승인 여부를 판단함)
+          연결할 사이트의 미리보기 주소 (위 항목과 달라도 됨, 해당 사이트를 바탕으로 1차적으로 승인 여부를 판단함)
           <input type="url" id="site-url" name="siteUrl" required />
         </label>
       </section>
@@ -160,7 +154,6 @@
 
       <div class="form-actions">
         <span id="form-submit-status" aria-live="polite"></span>
-        <button type="submit" id="submit-request" disabled>신청 제출</button>
       </div>
     </form>
   </div>

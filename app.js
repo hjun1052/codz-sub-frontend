@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 480);
   }
 
-  setInterval(changeWord, 3000);
+  setInterval(changeWord, 2000);
 });
 
 async function checkSubdomainAvailable(sub) {
@@ -303,6 +303,13 @@ verificationButton.addEventListener('click', async () => {
 
 requestForm.addEventListener('submit', async (evt) => {
   evt.preventDefault();
+  if (!submitRequestButton) {
+    if (formSubmitStatus) {
+      formSubmitStatus.textContent = '현재 온라인 신청은 이용할 수 없습니다.';
+      formSubmitStatus.style.color = '#ff7d7d';
+    }
+    return;
+  }
   if (submitRequestButton.disabled) return;
 
   const payload = {

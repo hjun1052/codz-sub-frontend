@@ -134,11 +134,11 @@ const platformGuides = {
   },
   cloudflare: {
     title: 'Cloudflare Pages / Workers',
-    body: 'Pages 프로젝트는 CNAME 레코드로 your-project.pages.dev 에 연결하세요. Workers 사이트는 Cloudflare 대시보드에서 안내하는 전용 대상 값을 사용합니다.',
+    body: 'Pages 프로젝트는 CNAME 레코드로 your-project.pages.dev 에 연결하세요. DNS에서 A 레코드(예:192.0.2.1) 더미 값을 작성하고 Cloudflare Routing에서 서브도메인 → Worker 매핑을 해야 동작하므로 Cloudflare의 상세 안내를 확인하세요.',
   },
   vercel: {
     title: 'Vercel 설정',
-    body: '서브도메인은 CNAME 레코드로 cname.vercel-dns.com 을, 루트 도메인은 A 레코드로 76.76.21.21 을 설정합니다.',
+    body: '서브도메인은 CNAME 레코드로 cname.vercel-dns.com 을 설정합니다.',
   },
   github: {
     title: 'GitHub Pages 설정',

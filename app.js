@@ -130,7 +130,7 @@ let emailVerified = false;
 const platformGuides = {
   netlify: {
     title: 'Netlify 설정',
-    body: '서브도메인은 CNAME 레코드로 your-site.netlify.app 을 가리키고, 루트 도메인은 A 레코드 두 개 (75.2.60.5, 99.83.190.102)를 권장합니다.',
+    body: '서브도메인은 CNAME 레코드로 your-site.netlify.app 을 가리키면 됩니다. 경우에 따라 TXT 레코드로 도메인 소유권 인증이 필요할 수 있습니다.',
   },
   cloudflare: {
     title: 'Cloudflare Pages / Workers',

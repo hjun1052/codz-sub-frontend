@@ -243,7 +243,7 @@ verificationButton.addEventListener('click', async () => {
       period,
     };
 
-    const res = await fetch('https://YOUR_WORKER_DOMAIN.workers.dev/request', {
+    const res = await fetch('https://codz-sub-verify.hjun7079.workers.dev/request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
